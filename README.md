@@ -1,17 +1,14 @@
-Stat 220, Final Project
+Predicting the house prices in California 
 ================
 
 ## URL for webpage/shiny app
 https://palmy.shinyapps.io/finalApp/
 
-## URL to screencast (if not embedded in webpage):
-https://drive.google.com/file/d/1_mp87WLKi9YHnh5hIS60_pKgUlWd5aR_/view
 
 ## List of files in the repository
 - main.Rmd : which include every code for library needed, data processing, ui&server, eda, and predictive model
 - img folder : which include all images that we have used for the app
 - finalApp folder : which is the folder for deploying and app
-- Report.pdf : which is the 3 pages long report for the project
 - housing.csv : which is the original dataset that we used for analysis
   
 ## Brief technical report
