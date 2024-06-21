@@ -1,25 +1,41 @@
-Predicting the house prices in California 
-================
 
-## URL for webpage/shiny app
-https://palmy.shinyapps.io/finalApp/
+## Predicting House Prices in California
 
+### Overview
+This project focuses on predicting house prices in California using machine learning techniques. The associated Shiny app, "Predicting the Prices of the House in the California Area using Machine Learning," offers insights and tools for exploring housing data in California. The dataset used was sourced from Kaggle, containing various numeric variables such as longitude, latitude, housingMedianAge, totalRooms, totalBedrooms, population, households, medianIncome, medianHouseValue, and oceanProximity.
 
-## List of files in the repository
-- main.Rmd : which include every code for library needed, data processing, ui&server, eda, and predictive model
-- img folder : which include all images that we have used for the app
-- finalApp folder : which is the folder for deploying and app
-- housing.csv : which is the original dataset that we used for analysis
-  
-## Brief technical report
-- it's inside the Report.pdf in this github repo
+### Features of the Shiny App
+The Shiny app provides a user-friendly interface with three main tabs:
 
+1. **Description Tab**: Offers an overview of the dataset and instructions on how to use the app.
+   
+2. **Exploratory Data Analysis (EDA) Tab**: Allows users to visualize the dataset through:
+   - Correlation matrix to understand relationships between variables.
+   - Cluster analysis based on mean values of multiple variables across California counties.
 
-## Description of the Shiny app and the features it has:
+3. **Predictive Modeling Tab**: Focuses on machine learning with options for:
+   - Decision Tree modeling.
+   - Variable Importance analysis to determine influential features.
+   
+   The app allows users to select models and visualize outputs interactively. The predictive modeling process includes data splitting, preprocessing using recipes, model specification, tuning via cross-validation, and visualization of decision trees using "rpart.plot". Conditional panels ensure that outputs are displayed based on user selections, enhancing user experience.
 
-The Shiny app, “Predicting the Prices of the House in the California Area using Machine Learning,” gives insights into housing prices in California. We chose to use this data because house prediction models are fundamental as we need certain assumptions on the house prices. This is just an example of the data we used. Later, we can use this idea with different data from a different place. So, it will be very useful for anyone who wants to predict housing prices where they want to buy one. This shiny app has different data visualizations, exploratory data analysis (EDA), and predictive modeling which has different elements inside it. We imported varieties of libraries like dplyr, tidyverse, and janitor for data manipulation and analysis; ggplot2 and plotly for visualization; tidy models, caret, and randomForest for machine learning and `shiny`, shinydashboard, and shinythemes for the shiny app framework.
-Data preprocessing was very important in our project. At first, we imported the California house prediction dataset from Kaggle. At first, we loaded the dataset and then changed “median_house_value” into two categorical variables, high and low, as it is the variable we are interested in predicting. After that we used the Tigris package to find the counties for each house using spatial joins with the California county file. We also converted the `ocean_proximity` variable into numeric from categorial. So, in total, we have these variables: longitude, latitude, housingMedianAge, totalRooms, totalBedrooms, population, households, medianIncome, medianHouseValue, oceanProximity, where all of the variables are numeric except for the medianHouseValue.
-Our Shiny app is made using a fluid page, which comprises three main tabs: the Description tab,  Exploratory Data Analysis, and the Predictive Modeling tab. The Description tab provides an overview of the dataset as well as how to use the app. The Exploratory Data Analysis tab allows users to choose and display either a correlation matrix or cluster analysis. For the correlation matrix, we can see the correlation between all these variables. For the cluster analysis, we make the clusters for the counties based on the mean values of multiple variables that we have, and median house values. It calculates the mean values for each variable for each county, performs K-means clustering to assign each county to one of three clusters, and then visualizes the results with a scatter plot. So, the cluster plot shows the chosen variable on the x-axis and the mean median house value on the y-axis, with points colored by their cluster. The Predictive Modeling tab is the main tab of our app as it is the one that does the machine learning analysis. Moreover, most of the things are interactive with different reactive buttons that allow users to explore wide features of the data. Here, we can select out of two models, a Decision Tree or Variable Importance.
-Variable importance is significant as it is useful for feature engineering, to find the relative influence of each variable that we have in our housing data. The app reactively renders images or plots based on user inputs for each relevant county in California. We can also see the Variable importance for all the counties in California. In predictive modeling, we can choose a model type, using `checkboxGroupInput` for Decision Trees and `selectInput` for Important Variables. On the process of making the Random forest Decision Tree, we performed machine learning analysis, by data splitting, recipe creation for the preprocessing, model specification and tuning using cross-validation, and visualization using “rpart.plot”. Moreover, we trimmed the random forest tree to make it more clear and understandable. 
-We wanted the random forest model to be hidden while the Variable importance is running and vice versa. So, to achieve this, we used Shiny conditional panels in order to show or hide outputs based on user selections. We had to import shinyjs for this feature in the app. Moreover, to make it look good and align it to the right with a decorative border, we wrote a small piece of custom CSS code. Moreover, to make the descriptive text align properly on the page, we used HTML codes. In this way, for our project, we integrated data preprocessing, EDA, and predictive modeling. Combination of all these into an interactive website, provides valuable insights into factors affecting housing prices in California, allowing users to explore different analytical perspectives and predictive models.
+### Technical Details
+- **Libraries Used**: dplyr, tidyverse, janitor, ggplot2, plotly, tidymodels, caret, randomForest, shiny, shinydashboard, shinythemes.
+- **Data Preprocessing**: Includes data loading, categorical variable conversion, and spatial joins using the Tigris package.
+- **Visualization**: Utilizes ggplot2 and plotly for interactive and static visualizations.
+- **Customization**: Custom CSS and HTML were used for layout adjustments and text alignment within the app.
+
+### Repository Structure
+- `main.Rmd`: Contains all necessary code for library imports, data processing, UI & server logic, EDA, and predictive modeling.
+- `img/`: Folder containing images used within the app.
+- `finalApp/`: Folder for deploying the Shiny app.
+- `housing.csv`: Original dataset sourced from Kaggle.
+- `Report.pdf`: Technical report providing additional insights and details about the project.
+
+### Usage
+To explore the Shiny app and its functionalities, visit [Predicting House Prices in California](https://palmy.shinyapps.io/finalApp/).
+
+### Conclusion
+This project integrates data preprocessing, exploratory data analysis, and machine learning into an interactive web application. It serves as a valuable resource for understanding the factors influencing housing prices in California and can be adapted for similar analyses in different geographical locations.
+
 
