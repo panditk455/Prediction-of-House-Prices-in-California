@@ -4,6 +4,9 @@
 ### Overview
 This project focuses on predicting house prices in California using machine learning techniques. The associated Shiny app, "Predicting the Prices of the House in the California Area using Machine Learning," offers insights and tools for exploring housing data in California. The dataset used was sourced from Kaggle, containing various numeric variables such as longitude, latitude, housingMedianAge, totalRooms, totalBedrooms, population, households, medianIncome, medianHouseValue, and oceanProximity.
 
+### Usage
+To explore the Shiny app and its functionalities, visit [Predicting House Prices in California](https://palmy.shinyapps.io/finalApp/).
+
 ### Features of the Shiny App
 The Shiny app provides a user-friendly interface with three main tabs:
 
@@ -32,8 +35,7 @@ The Shiny app provides a user-friendly interface with three main tabs:
 - `housing.csv`: Original dataset sourced from Kaggle.
 - `Report.pdf`: Technical report providing additional insights and details about the project.
 
-### Usage
-To explore the Shiny app and its functionalities, visit [Predicting House Prices in California](https://palmy.shinyapps.io/finalApp/).
+
 
 ### Conclusion
 This project integrates data preprocessing, exploratory data analysis, and machine learning into an interactive web application. It serves as a valuable resource for understanding the factors influencing housing prices in California and can be adapted for similar analyses in different geographical locations.
