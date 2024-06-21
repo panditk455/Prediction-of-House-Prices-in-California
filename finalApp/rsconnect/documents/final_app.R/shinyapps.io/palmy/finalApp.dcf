@@ -1,0 +1,12 @@
+name: finalApp
+title: finalApp
+username: palmy
+account: palmy
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12117177
+bundleId: 8695540
+url: https://palmy.shinyapps.io/finalApp/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

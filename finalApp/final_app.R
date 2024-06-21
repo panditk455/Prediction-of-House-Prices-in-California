@@ -1,0 +1,356 @@
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(tidymodels)
+library(tidyverse)
+library(plotly)
+library(stringr)
+library(gridExtra)
+library(shiny)
+library(tigris)
+library(shinydashboard)
+library(shinyWidgets)
+library(leaflet)
+library(sf)
+library(rvest)
+library(janitor)
+library(RColorBrewer)
+library(readr)
+library(tidytext)
+library(tidyr)
+library(purrr)
+library(polite)
+library(shinybusy)
+library(viridis)
+library(maps)
+library(ggplot2movies)
+library(DT)
+library(scales)
+library(rpart.plot)
+library(vip)
+library(ISLR)
+library(ranger)
+library(paletteer)
+library(corrr)
+library(factoextra)
+library(broom)
+library(caret)
+library(randomForest)
+library(cluster)
+library(shinythemes)
+library(ggrepel)
+library(tibble)
+library(knitr)
+library(parsnip)
+library(ggthemes)
+
+
+
+
+db <- read.csv("housing.csv")
+
+db <- db %>%
+  mutate(median_house_value = as.numeric(as.character(median_house_value)),
+         longitude = as.numeric(as.character(longitude)),
+         latitude = as.numeric(as.character(latitude)),
+         housing_median_age = as.numeric(as.character(housing_median_age)),
+         total_rooms = as.numeric(as.character(total_rooms)),
+         total_bedrooms = as.numeric(as.character(total_bedrooms)),
+         population = as.numeric(as.character(population)),
+         households = as.numeric(as.character(households)),
+         median_income = as.numeric(as.character(median_income)))
+
+
+median_price <- median(db$median_house_value)
+
+db <- db %>%
+  mutate(house_value_category = case_when(
+    median_house_value <= median_price ~ "Low",
+    median_house_value > median_price ~ "High"
+  ))
+
+db$house_value_category <- as.factor(db$house_value_category)
+
+
+counties <- tigris::counties(state = "CA", class = "sf")
+
+points_df <- db %>%
+  select(longitude, latitude)
+
+points_sf <- st_as_sf(points_df, coords = c("longitude", "latitude"), crs = st_crs(counties))
+
+points_with_counties <- st_join(points_sf, counties, join = st_within)
+
+db$county <- points_with_counties$NAME
+
+
+
+db <- db %>%
+  mutate(ocean_proximity_num = case_when(
+    ocean_proximity == "NEAR BAY" ~ 0,
+    ocean_proximity == "<1H OCEAN" ~ 1,
+    ocean_proximity == "INLAND" ~ 2,
+    ocean_proximity == "NEAR OCEAN" ~ 3,
+    ocean_proximity == "ISLAND" ~ 4,
+    TRUE ~ NA_integer_  # Handle other cases if any
+  ))
+
+
+db <- db %>%
+  mutate(ocean_proximity_num = as.numeric(as.character(ocean_proximity_num)))
+
+
+
+
+description_text <- "
+<h2>Predicting the Prices of the house in the California Area using Machine Learning App</h2>
+
+<p>Increasing housing prices in the United States and especially in California is an ongoing socio-economic issue in the country. California's housing prices have remained the highest compared to the rest of the country since the 1970s.</p>
+  
+<p>This Shiny app displays the median housing prices in California for the year 1990. While the data is not recent, it provides several insights into factors that might affect housing prices in the state. The dataset is sourced from Kaggle, an open-source data science platform.</p>
+  
+<p>The data highlights important factors influencing housing prices such as the distance from the coast and other important cities in the state.</p>
+
+<h3>Data Overview</h3>
+<p>The dataset pertains to houses found in various California districts and includes summary statistics based on the 1990 census data. Please note that the data are not cleaned, so preprocessing steps are required.</p>
+  
+<p>The columns in the dataset are as follows:</p>
+<ul>
+  <li><strong>longitude:</strong> A measure of how far west a house is; a higher value indicates farther west.</li>
+  <li><strong>latitude:</strong> A measure of how far north a house is; a higher value indicates farther north.</li>
+  <li><strong>housingMedianAge:</strong> Median age of a house within a block; a lower number indicates a newer building.</li>
+  <li><strong>totalRooms:</strong> Total number of rooms within a block.</li>
+  <li><strong>totalBedrooms:</strong> Total number of bedrooms within a block.</li>
+  <li><strong>population:</strong> Total number of people residing within a block.</li>
+  <li><strong>households:</strong> Total number of households, a group of people residing within a home unit, for a block.</li>
+  <li><strong>medianIncome:</strong> Median income for households within a block of houses (measured in tens of thousands of US Dollars).</li>
+  <li><strong>medianHouseValue:</strong> Median house value for households within a block (measured in US Dollars).</li>
+  <li><strong>oceanProximity:</strong> Location of the house with respect to the ocean/sea.</li>
+</ul>
+
+<p>This information provides valuable insights into the housing market trends and factors influencing housing prices in California.</p>
+
+
+<h3>Methods</h3>
+
+<p> In this Shiny app, we used different R packages for data preprocessing, exploratory data analysis (EDA), and predictive modeling. From the initial dataset that was extracted from Kaggle, we converted the `median_house_value` into two categorical variables, High and Low, by finding the median of the house prices. Through the use of the Tigris package, we spatially joined the data with California county files.
+
+Using the Shiny fluid page, there are three different tabs in this app: Description, which you are looking at right now, Exploratory Data Analysis, and Predictive Modeling. This Description tab provides an overview of the dataset, app functionality, and how it was developed. The second tab, the Exploratory Data Analysis tab, has two options: exploring the correlations between variables through a correlation matrix and performing cluster analysis on different variables and the median house prices to obtain clusters based on the counties in California. The Predictive Modeling tab is the main tab that has the machine learning model. There are two options there, Decision Tree and Variable Importance models. In the Decision Tree, you will get a random forest model where you have options to choose between different variables. You can choose different combinations of variables to see how the median house values change with the variables. We used custom CSS for keeping the image on the right side of the page and added custom borders to make it look prettier.</p>
+"
+
+
+
+library(shinyjs)
+ui <- fluidPage(
+  useShinyjs(),
+  tags$head(
+    tags$style(HTML("
+      .right-image {
+        float: right;
+        width: 100%; 
+        height: auto;
+        margin-left: 20px;
+        border: 10px solid #6CB4EE;
+        border-radius: 4px;  
+        
+      }
+    "))
+  ),
+  theme = shinytheme("cerulean"),
+  navbarPage("California House Prices",
+             tabPanel("Description",
+                      tags$img(
+                        src = 'https://static.vecteezy.com/system/resources/previews/014/440/773/original/housing-price-rising-up-real-estate-investment-or-property-growth-concept-house-with-arrow-graph-illustration-png.png',
+                        width = "600vw",  
+                        height = "auto" 
+                      ),
+                      HTML(description_text)
+             ),
+             tabPanel("Exploratory Data Analysis",
+                      fluidRow(
+                        column(3,
+                               selectInput("edaType", "Choose an analysis:", 
+                                           choices = c("Correlation Matrix", "Cluster Analysis"), 
+                                           selected = "Correlation Matrix"),
+                               uiOutput("variableSelection1"),
+                               actionButton("runEDA", "Run Analysis")
+                        ),
+                        column(9, 
+                               conditionalPanel(
+                                 condition = "input.edaType == 'Correlation Matrix'",
+                                 imageOutput("correlationImage")
+                               ),
+                               conditionalPanel(
+                                 condition = "input.edaType == 'Cluster Analysis'",
+                                 imageOutput("clusterImage")
+                               )
+                        )
+                      )
+             ),
+             tabPanel("Predictive Modeling",
+                      fluidRow(
+                        column(3,
+                               selectInput("modelType", "Choose a model:", 
+                                           choices = c("Important Variables", "Decision Tree"), 
+                                           selected = "Decision Tree"),
+                               uiOutput("variableSelection2"),  
+                               actionButton("runModel", "Run Model")
+                        ),
+                        column(9, 
+                               conditionalPanel(
+                                 condition = "input.modelType == 'Decision Tree'",
+                                 plotOutput("modelOutput")
+                               ),
+                               conditionalPanel(
+                                 condition = "input.modelType == 'Important Variables'",
+                                 imageOutput("countyImage")
+                               )
+                        )
+                      )
+             )
+  )
+)
+
+
+
+server <- function(input, output, session) {
+  observeEvent(input$runEDA, {
+    if (input$edaType == "Correlation Matrix") {
+      output$correlationImage <- renderImage({
+        filename <- normalizePath(file.path('./img/correlation_matrix.png'))
+        list(src = filename, alt = "Correlation Matrix", width = "80%", height = "auto")
+      }, deleteFile = FALSE)
+    } 
+    else if (input$edaType == "Cluster Analysis") {
+      output$clusterImage <- renderImage({
+        filename <- file.path('./img', paste0(tolower(input$variable), '.png'))
+        list(src = filename,
+             alt = input$variable,
+             contentType = 'image/png',
+             width = "60vw",  
+             height = "auto",
+             class = "right-image")
+      }, deleteFile = FALSE)
+      
+      
+    }
+    
+  })
+  
+  # Variable selection UI for eda(clustering)
+  output$variableSelection1 <- renderUI({
+    if (input$edaType == "Cluster Analysis") {
+      selectInput("variable", "Select a Variable for Clustering:",
+                  choices = list("Longitude" = "longitude",
+                                 "Latitude" = "latitude",
+                                 "Housing Age" = "housing_median_age",
+                                 "Number of Rooms" = "total_rooms",
+                                 "Number of Bedrooms" = "total_bedrooms",
+                                 "Population" = "population",
+                                 "Household" = "households",
+                                 "Median Income" = "median_income",
+                                 "Ocean Proximity" = "ocean_proximity_num"),
+                  selected = c("Median Income" = "median_income"))
+    }
+    
+  })
+  
+  # Variable selection UI for predictive
+  output$variableSelection2 <- renderUI({
+    if (input$modelType == "Decision Tree") {
+      checkboxGroupInput("selectedVariables", "Select variables for Decision Tree:",
+                         choices = list("Longitude" = "longitude",
+                                        "Latitude" = "latitude",
+                                        "Housing Age" = "housing_median_age",
+                                        "Number of Rooms" = "total_rooms",
+                                        "Number of Bedrooms" = "total_bedrooms",
+                                        "Population" = "population",
+                                        "Household" = "households",
+                                        "Median Income" = "median_income",
+                                        "Ocean Proximity" = "ocean_proximity_num"),
+                         selected = c("total_rooms", "total_bedrooms"))
+    } else if (input$modelType == "Important Variables"){
+      selectInput("selectCounty", "Select county in California:",
+                  choices = list("Costra Costa",
+                                 "Los Angeles",
+                                 "Riverside",
+                                 "San Bernardino",
+                                 "San Diego",
+                                 "Santa Barbara",
+                                 "All Counties"),
+                  selected = c("All Counties"))
+    }
+  })
+  
+  # Observe for prediction
+  observeEvent(input$runModel, {
+    if (input$modelType == "Decision Tree") {
+      output$modelOutput <- renderPlot({
+        if (is.null(input$selectedVariables)) {
+          return(NULL)
+        }
+        
+        selected_vars <- input$selectedVariables
+        
+        db <- db %>% drop_na() %>%
+          mutate(house_value_category = fct_relevel(house_value_category, c("High", "Medium", "Low")))
+        
+        db_split <- initial_split(db, prop = 0.75)
+        db_train <- db_split %>% training()
+        db_test <- db_split %>% testing()
+        
+        db_train_selected <- db_train %>% select(house_value_category, all_of(selected_vars))
+        
+        db_recipe <- recipe(house_value_category ~ ., data = db_train_selected) %>%
+          step_dummy(all_nominal(), -all_outcomes()) 
+        
+        tree_model <- decision_tree(cost_complexity = tune(),
+                                    tree_depth = tune(),
+                                    min_n = tune()) %>% 
+          set_engine('rpart') %>% 
+          set_mode('classification')
+        
+        tree_workflow <- workflow() %>% 
+          add_model(tree_model) %>% 
+          add_recipe(db_recipe)
+        
+        db_folds <- vfold_cv(db_train_selected, v = 5, strata = house_value_category)
+        
+        tree_grid <- grid_random(cost_complexity(),
+                                 tree_depth(),
+                                 min_n(), 
+                                 size = 10)
+        set.seed(314)
+        tree_tuning <- tree_workflow %>% 
+          tune_grid(resamples = db_folds,
+                    grid = tree_grid)
+        
+        best_tree <- tree_tuning %>% 
+          select_best(metric = 'accuracy')
+        
+        final_tree_workflow <- tree_workflow %>% 
+          finalize_workflow(best_tree)
+        
+        tree_wf_fit <- tree_workflow %>% finalize_workflow(best_tree) %>% 
+          fit(data = db_train_selected)
+        tree_fit <- tree_wf_fit %>% extract_fit_parsnip()
+        
+        
+        pruned_tree <- rpart::prune(tree_fit$fit, cp = 0.01)
+        
+        rpart.plot(pruned_tree, roundint = FALSE)
+        
+      })
+    } 
+    
+    else if (input$modelType == "Important Variables") {
+      output$countyImage <- renderImage({
+        filename <- file.path('./img', paste0(tolower(input$selectCounty), '.png'))
+        list(src = filename, alt = input$selectCounty, contentType = 'image/png', class = "right-image")
+      }, deleteFile = FALSE)
+    }
+  })
+}
+
+shinyApp(ui, server)
+
